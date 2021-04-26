@@ -11,6 +11,7 @@ XSLoader::load('Parallel::Spoon', $VERSION);
 # \see lib/Parallel/Util.xs
 use constant {
   REDUCE_SUM => 0,
+  REDUCE_ADJ_DIFF => 1,
 };
 
 1;

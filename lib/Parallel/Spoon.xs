@@ -10,6 +10,7 @@
 // Interface {{{
 typedef enum {
   REDUCE_SUM=0,
+  REDUCE_ADJ_DIFF,
 } reduce_t;
 
 typedef I32 (*reducer_t)(I32, I32);
@@ -17,6 +18,11 @@ typedef I32 (*reducer_t)(I32, I32);
 static I32
 reduce_sum(I32 acc, I32 other) {
   return acc + other;
+}
+
+static I32
+reduce_adj_diff(I32 acc, I32 other) {
+  return acc - other;
 }
 
 #define CHKISINT(x) \
@@ -33,7 +39,17 @@ I32 reducer;
 CODE:
   RETVAL = 0;
   reducer_t fp;
-  fp = &reduce_sum;
+  I32 start = 1;
+  switch (reducer) {
+    case REDUCE_SUM: fp = &reduce_sum; break;
+    case REDUCE_ADJ_DIFF:
+      start++;
+      CHKISINT(1);
+      RETVAL = SvIVX(ST(1));
+      fp = reduce_adj_diff;
+      break;
+    default: croak("invalid reducer with value %d", reducer);
+  }
 
   if (items == 1) {
     croak("list of length 0 doesn't make any sense!");
@@ -44,7 +60,7 @@ CODE:
   }
   else {
     I32 i;
-    for (i = 1; i < items; i++) {
+    for (i = start; i < items; i++) {
       CHKISINT(i);
       RETVAL = (*fp)(RETVAL, SvIVX(ST(i)));
     }
