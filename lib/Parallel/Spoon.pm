@@ -8,6 +8,11 @@ our $VERSION = 0.01;
 require XSLoader;
 XSLoader::load('Parallel::Spoon', $VERSION);
 
+# \see lib/Parallel/Util.xs
+use constant {
+  REDUCE_SUM => 0,
+};
+
 1;
 
 __END__

@@ -7,16 +7,50 @@
 #include <unistd.h>
 #include <stdint.h>
 
+// Interface {{{
+typedef enum {
+  REDUCE_SUM=0,
+} reduce_t;
+
+typedef I32 (*reducer_t)(I32, I32);
+
+static I32
+reduce_sum(I32 acc, I32 other) {
+  return acc + other;
+}
+
+#define CHKISINT(x) \
+  if (!SvOK(ST(x)) || !SvIOK(ST(x))) \
+    croak("requires a list of integers");
+
 MODULE = Parallel::Spoon PACKAGE = Parallel::Spoon PREFIX = spoon_
 PROTOTYPES: ENABLE
 
 # Sum a list under multiple procs
-# static int
-# spoon_reduce(subname, ...)
-# char* subname;
-# CODE:
-# OUTPUT:
-#   RETVAL
+static int
+spoon_reduce(reducer, ...)
+I32 reducer;
+CODE:
+  RETVAL = 0;
+  reducer_t fp;
+  fp = &reduce_sum;
+
+  if (items == 1) {
+    croak("list of length 0 doesn't make any sense!");
+  }
+  else if (items == 2) {
+    CHKISINT(1);
+    RETVAL = SvIVX(ST(1));
+  }
+  else {
+    I32 i;
+    for (i = 1; i < items; i++) {
+      CHKISINT(i);
+      RETVAL = (*fp)(RETVAL, SvIVX(ST(i)));
+    }
+  }
+OUTPUT:
+  RETVAL
 
 # Invoke a callback under n procs
 static int
@@ -28,7 +62,7 @@ CODE:
   if (n <= 0)
     croak("n <= 0 doesn't make any sense!");
 
-  uint32_t i = 0;
+  I32 i = 0;
   bool isparent = false;
 spawn:
   switch (fork()) {
