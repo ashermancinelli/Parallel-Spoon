@@ -68,6 +68,20 @@ CODE:
 OUTPUT:
   RETVAL
 
+# Map a sub to each value of a list
+static AV*
+spoon_map(sub, ...)
+SV* sub
+CODE:
+  RETVAL = (AV*)sv_2mortal((SV*)newAV());
+  I32 i;
+  for (i = 1; i < items; i++) {
+    CHKISINT(i);
+    av_push(RETVAL, newSVnv(i));
+  }
+OUTPUT:
+  RETVAL
+
 # Invoke a callback under n procs
 static int
 spoon_call(subname, n)
